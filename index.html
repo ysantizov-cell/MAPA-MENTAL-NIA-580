@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>NIA 580 — Mapa Mental</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700;9..144,800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg1:#141a2b; --bg2:#0d1120;
+    --card:#fffdf8; --ink:#241f1a; --ink-soft:#5c5548; --muted:#8c93a6;
+    --line:#232b42; --line-soft:#2c3550;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0; padding:0; height:100%; font-family:'Inter',sans-serif; color:#eef1f6; overflow:hidden;}
+  body{
+    background: radial-gradient(ellipse at 50% -10%, #1c2540 0%, var(--bg1) 45%, var(--bg2) 100%);
+    display:flex; align-items:center; justify-content:center;
+  }
+ 
+  .wrap{width:100%; max-width:920px; height:100vh; padding:26px 24px 20px; display:flex; flex-direction:column; align-items:center;}
+ 
+  header{width:100%; text-align:center; margin-bottom:10px;}
+  header h1{
+    font-family:'Fraunces',serif; font-weight:800; font-size:28px; margin:0 0 6px;
+    letter-spacing:.3px;
+  }
+  header .subtitle{
+    margin:0; font-size:13.5px; color:#a7b0c4; font-family:'JetBrains Mono',monospace; letter-spacing:.3px;
+  }
+  header .subtitle b{color:#dcbf7e; font-weight:600;}
+ 
+  .progress{width:100%; max-width:640px; height:4px; background:#2a3350; border-radius:4px; margin:16px auto 0; overflow:hidden;}
+  .progress .bar{height:100%; border-radius:4px; background:linear-gradient(90deg,#e8c25a,#c74848); transition:width .4s ease;}
+ 
+  .stepBadge{
+    margin:16px 0 4px; padding:7px 20px; border-radius:20px; background:#1c2440; border:1px solid var(--line-soft);
+    font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:1px; color:#dcbf7e;
+  }
+ 
+  .stage{width:100%; flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:0; position:relative;}
+ 
+  /* ---------------- Hexagon timeline ---------------- */
+  .hexRow{
+    display:flex; align-items:center; justify-content:center; gap:22px; height:190px; width:100%;
+    position:relative; z-index:2;
+  }
+  .hex{
+    --c:#666;
+    flex:none; width:78px; height:68px;
+    clip-path:polygon(25% 4%, 75% 4%, 98% 50%, 75% 96%, 25% 96%, 2% 50%);
+    background:linear-gradient(155deg, var(--c), color-mix(in srgb, var(--c) 55%, #000));
+    display:flex; align-items:center; justify-content:center; text-align:center; padding:6px;
+    font-family:'JetBrains Mono',monospace; font-size:8.5px; font-weight:700; letter-spacing:.5px; text-transform:uppercase;
+    color:rgba(255,255,255,.75); cursor:pointer; opacity:.32; transform:scale(.72);
+    transition:all .45s cubic-bezier(.4,0,.2,1); user-select:none;
+  }
+  .hex.adjacent{opacity:.62; transform:scale(.88); color:rgba(255,255,255,.9);}
+  .hex.active{
+    width:190px; height:168px; font-size:15px; opacity:1; transform:scale(1);
+    box-shadow:0 0 0 3px rgba(255,255,255,.9), 0 0 20px 2px var(--c), 0 0 60px 8px var(--c);
+    color:#fff; z-index:5; letter-spacing:1px;
+  }
+  .hex.farhidden{opacity:0; transform:scale(.5); pointer-events:none;}
+ 
+  /* ---------------- Content card ---------------- */
+  .card{
+    width:100%; max-width:680px; background:var(--card); border-radius:18px;
+    padding:26px 30px 22px; margin-top:6px;
+    box-shadow:0 30px 60px -20px rgba(0,0,0,.55), 0 0 0 1px rgba(255,255,255,.05);
+    position:relative; z-index:3;
+  }
+  .card .head{display:flex; align-items:center; gap:10px; margin-bottom:6px;}
+  .card .swatch{width:11px; height:11px; border-radius:3px; background:var(--c); box-shadow:0 0 10px var(--c);}
+  .card .kicker{font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--c); letter-spacing:1.5px; text-transform:uppercase;}
+  .card h2{font-family:'Fraunces',serif; font-weight:700; font-size:23px; margin:2px 0 10px; color:var(--ink);}
+  .card .lede{font-size:14px; color:var(--ink-soft); line-height:1.55; margin:0 0 16px;}
+ 
+  .bullets{list-style:none; margin:0 0 16px; padding:0; display:flex; flex-direction:column; gap:9px;}
+  .bullets li{
+    display:flex; align-items:flex-start; gap:11px; padding:11px 14px; border-radius:10px;
+    background:linear-gradient(90deg, color-mix(in srgb, var(--c) 10%, #fff), color-mix(in srgb, var(--c) 4%, #fff));
+    border-left:3px solid var(--c);
+    font-size:13.3px; color:#3c362e; line-height:1.48;
+    opacity:0; animation:bIn .4s ease forwards;
+  }
+  .bullets li:nth-child(1){animation-delay:.05s;}
+  .bullets li:nth-child(2){animation-delay:.13s;}
+  .bullets li:nth-child(3){animation-delay:.21s;}
+  .bullets li:nth-child(4){animation-delay:.29s;}
+  @keyframes bIn{from{opacity:0; transform:translateX(-6px);} to{opacity:1; transform:translateX(0);}}
+  .bullets .ic{flex:none; font-family:'JetBrains Mono',monospace; font-weight:700; color:var(--c); font-size:13px; margin-top:1px;}
+ 
+  .tag{
+    display:inline-block; font-family:'JetBrains Mono',monospace; font-size:11.5px; letter-spacing:.5px;
+    color:#6b6458; background:#efe9db; padding:6px 14px; border-radius:20px;
+  }
+ 
+  /* ---------------- Nav controls ---------------- */
+  .nav{display:flex; align-items:center; gap:22px; margin-top:18px;}
+  .navBtn{
+    width:44px; height:44px; border-radius:50%; border:2px solid #fff; background:#141a2b; color:#fff;
+    font-size:19px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+    transition:transform .15s ease, background .15s ease;
+  }
+  .navBtn:hover{background:#232c4a; transform:scale(1.06);}
+  .navBtn:disabled{opacity:.3; cursor:default; transform:none;}
+ 
+  .dots{display:flex; gap:8px;}
+  .dot{width:9px; height:9px; border-radius:50%; background:#3a4364; cursor:pointer; transition:all .25s ease;}
+  .dot.on{background:var(--dc,#dcbf7e); width:22px; border-radius:6px; box-shadow:0 0 8px var(--dc,#dcbf7e);}
+ 
+  .hint{margin-top:12px; font-family:'JetBrains Mono',monospace; font-size:11.5px; color:#7c85a0; letter-spacing:.4px;}
+  .hint kbd{background:#232c4a; border:1px solid #363f60; border-radius:4px; padding:1px 6px; font-family:inherit; margin:0 2px;}
+ 
+  @media (max-height:760px){
+    .hexRow{height:150px;}
+    .hex.active{width:160px; height:140px; font-size:13px;}
+    .card{padding:20px 24px 16px;}
+  }
+</style>
+</head>
+<body>
+ 
+<div class="wrap">
+  <header>
+    <h1>🧭 Mapa Mental — NIA 580</h1>
+    <p class="subtitle">NIA 580 · Manifestaciones escritas — <b>vigente desde el 15·XII·2009</b> · Navega con las flechas</p>
+    <div class="progress"><div class="bar" id="bar"></div></div>
+  </header>
+ 
+  <div class="stepBadge" id="stepBadge">Paso 1 de 9</div>
+ 
+  <div class="stage">
+    <div class="hexRow" id="hexRow"></div>
+    <div class="card" id="card"></div>
+  </div>
+ 
+  <div class="nav">
+    <button class="navBtn" id="prevBtn">‹</button>
+    <div class="dots" id="dots"></div>
+    <button class="navBtn" id="nextBtn">›</button>
+  </div>
+  <div class="hint">Usa las teclas <kbd>←</kbd> <kbd>→</kbd> para navegar, o haz clic en los hexágonos / puntos</div>
+</div>
+ 
+<script>
+  const steps = [
+    {
+      label:"Introducción", ref:"§1–2", color:"#2f7d72",
+      title:"1. Introducción",
+      lede:"Esta norma trata la responsabilidad del auditor de obtener manifestaciones escritas de la dirección y, cuando proceda, de los responsables del gobierno de la entidad.",
+      bullets:[
+        {ic:"§", text:"Alcance: cubre toda auditoría de estados financieros, incluyendo, cuando proceda, a los responsables del gobierno corporativo."},
+        {ic:"◆", text:"El Anexo 1 lista otras NIA que exigen manifestaciones específicas; no limitan la aplicación de esta norma."}
+      ],
+      tag:"Apartado 1–2"
+    },
+    {
+      label:"Evidencia", ref:"§3–4", color:"#3d5a8a",
+      title:"2. Manifestaciones como evidencia",
+      lede:"Las manifestaciones escritas constituyen evidencia de auditoría necesaria, similar a las respuestas a indagaciones — pero no son suficientes por sí solas.",
+      bullets:[
+        {ic:"✓", text:"Son información que el auditor requiere para alcanzar las conclusiones en las que basa su opinión."},
+        {ic:"✓", text:"Por sí solas no proporcionan evidencia suficiente y adecuada sobre ninguna de las cuestiones a las que se refieren."},
+        {ic:"◆", text:"No afectan la naturaleza ni la extensión de otra evidencia obtenida por el auditor."}
+      ],
+      tag:"Apartado 3–4"
+    },
+    {
+      label:"Objetivo", ref:"§6", color:"#b6862a",
+      title:"3. Objetivo",
+      lede:"Aceptar o continuar un encargo únicamente cuando exista una comprensión y respuesta adecuadas a las manifestaciones de la dirección.",
+      bullets:[
+        {ic:"a", text:"Obtener manifestaciones de que la dirección considera haber cumplido su responsabilidad en la preparación de los EEFF y en la integridad de la información."},
+        {ic:"b", text:"Fundamentar otra evidencia de auditoría relevante, cuando el auditor o las NIA lo requieran."},
+        {ic:"c", text:"Responder de modo adecuado a las manifestaciones proporcionadas, o no, por la dirección."}
+      ],
+      tag:"Apartado 6"
+    },
+    {
+      label:"Definición", ref:"§7–8", color:"#6a4f92",
+      title:"4. Definiciones",
+      lede:"Qué es una manifestación escrita y a quién se refiere el término «dirección» a lo largo de esta norma.",
+      bullets:[
+        {ic:"◆", text:"Manifestación escrita: documento suscrito por la dirección para confirmar materias o soportar evidencia; no incluye los propios estados financieros."},
+        {ic:"§", text:"«Dirección» se entiende como «la dirección y, cuando proceda, los responsables del gobierno de la entidad»."}
+      ],
+      tag:"Apartado 7–8"
+    },
+    {
+      label:"Destinatarios", ref:"§9", color:"#a83f63",
+      title:"5. Miembros de la dirección",
+      lede:"A quién debe solicitar el auditor las manifestaciones escritas dentro de la organización.",
+      bullets:[
+        {ic:"✓", text:"A los miembros con responsabilidades adecuadas sobre los estados financieros y conocimiento de las cuestiones."},
+        {ic:"◆", text:"Puede incluir a especialistas: actuarios, ingenieros o asesores internos con conocimientos relevantes."}
+      ],
+      tag:"Apartado 9"
+    },
+    {
+      label:"Responsabilidad", ref:"§10–12", color:"#bb5e2c",
+      title:"6. Responsabilidades de la dirección",
+      lede:"Manifestaciones específicas sobre la preparación de los estados financieros y la integridad de la información proporcionada al auditor.",
+      bullets:[
+        {ic:"✓", text:"Preparación de los EEFF conforme al marco de información financiera aplicable, incluida su presentación fiel."},
+        {ic:"✓", text:"Toda la información y el acceso acordados se han proporcionado; todas las transacciones están registradas."},
+        {ic:"§", text:"Las responsabilidades se describen tal como figuran en los términos del encargo de auditoría."}
+      ],
+      tag:"Apartado 10–12"
+    },
+    {
+      label:"Otras manif.", ref:"§13", color:"#4c7a41",
+      title:"7. Otras manifestaciones escritas",
+      lede:"Manifestaciones adicionales que otras NIA exigen, o que el auditor considera necesarias para fundamentar la evidencia.",
+      bullets:[
+        {ic:"§", text:"Otras NIA pueden requerir manifestaciones específicas sobre materias concretas de la auditoría."},
+        {ic:"◆", text:"El auditor puede solicitarlas para fundamentar evidencia relevante o afirmaciones concretas de los EEFF."}
+      ],
+      tag:"Apartado 13"
+    },
+    {
+      label:"Fecha/forma", ref:"§14–15", color:"#8a3aa8",
+      title:"8. Fecha y forma",
+      lede:"Cuándo deben firmarse las manifestaciones escritas y qué forma deben adoptar.",
+      bullets:[
+        {ic:"✓", text:"Fecha tan próxima como sea posible, pero no posterior, a la fecha del informe de auditoría."},
+        {ic:"◆", text:"Cubren todos los estados financieros y periodo o periodos a los que se refiere el informe."},
+        {ic:"§", text:"Forma: una carta de manifestaciones dirigida al auditor."}
+      ],
+      tag:"Apartado 14–15"
+    },
+    {
+      label:"Fiabilidad", ref:"§16–20", color:"#a13232",
+      title:"9. Dudas y manifestaciones no proporcionadas",
+      lede:"Qué hacer si el auditor duda de la fiabilidad de las manifestaciones, o si la dirección no las proporciona.",
+      bullets:[
+        {ic:"✓", text:"Si hay incongruencias con otra evidencia, se aplican procedimientos adicionales para resolverlas."},
+        {ic:"✓", text:"Si no son fiables o no se proporcionan, se evalúa el efecto sobre la opinión del informe."},
+        {ic:"§", text:"El auditor deniega la opinión si existen dudas suficientes sobre la integridad, o faltan manifestaciones clave (§20)."}
+      ],
+      tag:"Apartado 16–20"
+    },
+  ];
+ 
+  const total = steps.length;
+  let idx = 0;
+ 
+  const hexRow = document.getElementById('hexRow');
+  const card = document.getElementById('card');
+  const bar = document.getElementById('bar');
+  const stepBadge = document.getElementById('stepBadge');
+  const dotsEl = document.getElementById('dots');
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+ 
+  function buildHexes(){
+    hexRow.innerHTML = '';
+    steps.forEach((s,i)=>{
+      const h = document.createElement('div');
+      h.className = 'hex';
+      h.style.setProperty('--c', s.color);
+      h.textContent = s.label;
+      h.onclick = ()=>goTo(i);
+      hexRow.appendChild(h);
+    });
+    dotsEl.innerHTML = '';
+    steps.forEach((s,i)=>{
+      const d = document.createElement('div');
+      d.className = 'dot';
+      d.style.setProperty('--dc', s.color);
+      d.onclick = ()=>goTo(i);
+      dotsEl.appendChild(d);
+    });
+  }
+ 
+  function render(){
+    const hexes = hexRow.children;
+    for(let i=0;i<total;i++){
+      const delta = Math.abs(i-idx);
+      hexes[i].classList.remove('active','adjacent','farhidden');
+      if(delta===0) hexes[i].classList.add('active');
+      else if(delta===1) hexes[i].classList.add('adjacent');
+      else if(delta>=3) hexes[i].classList.add('farhidden');
+    }
+ 
+    const dots = dotsEl.children;
+    for(let i=0;i<total;i++){ dots[i].classList.toggle('on', i===idx); }
+ 
+    const s = steps[idx];
+    card.style.setProperty('--c', s.color);
+    card.innerHTML = `
+      <div class="head"><span class="swatch"></span><span class="kicker">${s.ref}</span></div>
+      <h2>${s.title}</h2>
+      <p class="lede">${s.lede}</p>
+      <ul class="bullets">
+        ${s.bullets.map(b=>`<li><span class="ic">${b.ic}</span><span>${b.text}</span></li>`).join('')}
+      </ul>
+      <span class="tag">${s.tag}</span>
+    `;
+ 
+    bar.style.width = (idx/(total-1)*100) + '%';
+    stepBadge.textContent = `Paso ${idx+1} de ${total}`;
+    prevBtn.disabled = idx===0;
+    nextBtn.disabled = idx===total-1;
+  }
+ 
+  function goTo(i){
+    idx = Math.max(0, Math.min(total-1, i));
+    render();
+  }
+ 
+  prevBtn.onclick = ()=>goTo(idx-1);
+  nextBtn.onclick = ()=>goTo(idx+1);
+  window.addEventListener('keydown', e=>{
+    if(e.key==='ArrowLeft') goTo(idx-1);
+    if(e.key==='ArrowRight') goTo(idx+1);
+  });
+ 
+  buildHexes();
+  render();
+</script>
+</body>
+</html>
